@@ -1,4 +1,4 @@
-#Dockerfile
+Dockerfile
 uptime/vendor/*
 #uptime-chart/*
 # uptime-0.1.0.tgz
