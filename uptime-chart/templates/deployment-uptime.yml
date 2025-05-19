@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uptime
+  labels:
+    app: uptime
+    env: test
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: uptime
+      env: test
+  template:
+    metadata:
+      labels:
+        app: uptime
+        env: test
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          ports:
+              - containerPort: {{ .Values.service.port }}
+                protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+                   env:
+            {{- if .Values.remotedb.enabled }}
+            # - name: DATABASE_SERVER
+            #   value: {{ required "remotedb.host is required when remotedb.enabled=true" .Values.remotedb.host | quote }}
+            # - name: DATABASE_PORT
+            #   value: {{ required "remotedb.port is required when remotedb.enabled=true" .Values.remotedb.port | quote }}
+            # - name: DATABASE_USERNAME
+            #   value: {{ required "remotedb.username is required when remotedb.enabled=true" .Values.remotedb.username | quote }}
+            # - name: DATABASE_PASSWORD
+            #   value: {{ required "remotedb.password is required when remotedb.enabled=true" .Values.remotedb.password | quote }}
+            # - name: DATABASE_NAME
+            #   value: {{ required "remotedb.database is required when remotedb.enabled=true" .Values.remotedb.database | quote }}
+            {{- else }}
+            - name: DATABASE_SERVER
+              value: mysql-service
+            - name: DATABASE_USERNAME
+              value: root
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-db-password
+                  key: db-password
+            - name: DATABASE_NAME
+              value: uptime
+            {{- end }}
